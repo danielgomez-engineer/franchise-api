@@ -2,9 +2,11 @@ package com.danielgomez.franchise.usecase.franchise;
 
 import com.danielgomez.franchise.domain.model.exception.ResourceNotFoundException;
 import com.danielgomez.franchise.domain.model.franchise.Branch;
+import com.danielgomez.franchise.domain.model.franchise.BranchTopProduct;
 import com.danielgomez.franchise.domain.model.franchise.Franchise;
 import com.danielgomez.franchise.domain.model.franchise.Product;
 import com.danielgomez.franchise.domain.port.out.FranchiseRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.UnaryOperator;
@@ -53,10 +55,19 @@ public class FranchiseUseCase {
         return update(franchiseId, franchise -> franchise.renameProduct(branchId, productId, newName));
     }
 
+    public Flux<BranchTopProduct> getTopStockProductPerBranch(String franchiseId) {
+        return findFranchise(franchiseId)
+                .flatMapIterable(Franchise::topStockProductPerBranch);
+    }
+
     private Mono<Franchise> update(String franchiseId, UnaryOperator<Franchise> change) {
-        return franchiseRepository.findById(franchiseId)
-                .switchIfEmpty(Mono.error(() -> new ResourceNotFoundException("Franchise", franchiseId)))
+        return findFranchise(franchiseId)
                 .map(change)
                 .flatMap(franchiseRepository::save);
+    }
+
+    private Mono<Franchise> findFranchise(String franchiseId) {
+        return franchiseRepository.findById(franchiseId)
+                .switchIfEmpty(Mono.error(() -> new ResourceNotFoundException("Franchise", franchiseId)));
     }
 }
