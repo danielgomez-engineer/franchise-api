@@ -1,0 +1,17 @@
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    build: .
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/franchises
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
